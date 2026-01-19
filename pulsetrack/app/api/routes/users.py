@@ -1,4 +1,4 @@
-from fastapi import APIRouter 
+from fastapi import APIRouter  # type: ignore
 from app.schemas.user import UserCreate
 
 router= APIRouter(prefix="/users",tags=["users"])

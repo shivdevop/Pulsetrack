@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI # type: ignore
 from app.api.routes.users import router as user_router 
 
 app=FastAPI()
