@@ -1,0 +1,19 @@
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: pulsetrack
+      POSTGRES_PASSWORD: pulsetrack
+      POSTGRES_DB: pulsetrack_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+    
+volumes:
+  postgres_data:
+
+  
