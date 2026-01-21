@@ -7,4 +7,5 @@ class User(Base):
     id=Column(Integer,primary_key=True)
     email=Column(String, nullable=False, index=True, unique=True)
     password=Column(String, nullable=False)
-    
+
+
