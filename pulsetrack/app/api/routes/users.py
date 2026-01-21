@@ -4,6 +4,7 @@ from sqlalchemy import select
 from app.schemas.user import UserCreate, UserResponse
 from app.models.user import User
 from app.api.deps import get_db
+from app.core.security import hash_password
 
 
 
@@ -25,7 +26,7 @@ async def register_user(user: UserCreate, db: AsyncSession=Depends(get_db)):
     #if user not found, create a new user 
     new_user=User(
         email=user.email,
-        password=user.password  
+        password=hash_password(user.password)
     )
 
     #persist to db 
