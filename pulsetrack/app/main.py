@@ -1,5 +1,6 @@
 from fastapi import FastAPI # type: ignore
 from app.api.routes.users import router as user_router 
+from app.api.routes.auth import router as auth_router 
 from app.db.session import engine
 from app.db.base import Base
 from app.models.user import User
@@ -13,6 +14,7 @@ def health_check():
 
 
 app.include_router(user_router)
+app.include_router(auth_router)
 
 @app.on_event("startup")
 async def on_startup():
