@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.api.deps import get_db
 from app.core.jwt import create_access_token
-from app.core.security import verify_password
+from app.core.security import verify_password,get_current_user
 from app.core.config import settings
 from app.models.user import User
 
@@ -48,3 +48,6 @@ async def login(form_data: OAuth2PasswordRequestForm =Depends(),
 
     
     
+@router.get("/me")
+def get_current_user(current_user:int =Depends(get_current_user)):
+    return {"message":f"hello current user {current_user}"}
