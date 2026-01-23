@@ -11,7 +11,7 @@ from app.core.security import verify_password,get_current_user,create_refresh_to
 from app.core.config import settings
 from app.models.user import User
 from app.models.refresh_token import RefreshToken
-from app.schemas.auth import RefreshTokenRequest,LogoutRequest
+from app.schemas.auth import RefreshTokenRequest,LogoutRequest,SessionResponse
 
 router=APIRouter(tags=["auth"])
 
@@ -64,7 +64,7 @@ async def login(form_data: OAuth2PasswordRequestForm =Depends(),
     
     
 @router.get("/me")
-def get_current_user(current_user:int =Depends(get_current_user)):
+def current_user(current_user:int =Depends(get_current_user)):
     return {"message":f"hello current user {current_user}"}
 
 @router.post("/refresh")
@@ -138,3 +138,14 @@ async def logout(data: LogoutRequest, db: AsyncSession = Depends(get_db)):
     return{
         "message":"Logged out successfully"
     }
+
+@router.get("/activeSessions",response_model=list[SessionResponse])
+async def list_sessions(current_user_id:int =Depends(get_current_user),
+                        db: AsyncSession= Depends(get_db)):
+    result=await db.execute(select(RefreshToken).where(
+        RefreshToken.user_id==current_user_id,
+        RefreshToken.revoked==False
+    ).order_by(RefreshToken.created_at.desc()))
+
+    sessions=result.scalars().all()
+    return sessions
