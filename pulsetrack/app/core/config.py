@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_SECRET_KEY: str = Field(...)
     ALGORITHM: str= Field(...)
     ACCESS_TOKEN_EXPIRE_MINUTES: int=Field(...)
+    REFRESH_TOKEN_EXPIRE_DAYS: int=Field(...)
 
     model_config = {
         "env_file": ".env",

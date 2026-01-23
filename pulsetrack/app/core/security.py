@@ -3,6 +3,8 @@ from app.core.config import settings
 from fastapi import Depends, HTTPException, status
 from jose import JWTError, jwt
 from fastapi.security import OAuth2PasswordBearer
+import secrets
+
 
 password_hasher= PasswordHash.recommended()
 
@@ -34,3 +36,6 @@ def get_current_user(token: str = Depends(oauth2_scheme)):
             headers={"WWW-Authenticate": "Bearer"}
 
         ) 
+    
+def create_refresh_token() -> str:
+    return secrets.token_urlsafe(64)
