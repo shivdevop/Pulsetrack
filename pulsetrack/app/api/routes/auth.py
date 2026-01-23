@@ -11,6 +11,7 @@ from app.core.security import verify_password,get_current_user,create_refresh_to
 from app.core.config import settings
 from app.models.user import User
 from app.models.refresh_token import RefreshToken
+from app.schemas.auth import RefreshTokenRequest
 
 router=APIRouter(tags=["auth"])
 
@@ -65,3 +66,57 @@ async def login(form_data: OAuth2PasswordRequestForm =Depends(),
 @router.get("/me")
 def get_current_user(current_user:int =Depends(get_current_user)):
     return {"message":f"hello current user {current_user}"}
+
+@router.post("/refresh")
+async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(get_db)):
+
+    #find refresh token in db 
+    result=await db.execute(select(RefreshToken).where(RefreshToken.token==data.refresh_token))
+    refresh_token=result.scalar_one_or_none()
+
+    if(not refresh_token or refresh_token.revoked==True or refresh_token.expires_at<datetime.utcnow()):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="invalid or expired refresh token"
+        )
+    
+    #refresh token is valid, so now find the user with this token's user id 
+    user_result= await db.execute(select(User).where(User.id==refresh_token.user_id))
+    user=user_result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(
+            status=status.HTTP_401_UNAUTHORIZED,
+            detail="couldn't find user"
+        )
+    
+    #since user is found, we will revoke old refresh token, issue a new refresh token and persist to db 
+
+    refresh_token.revoked=True
+    new_refresh_token=create_refresh_token()
+
+    new_refresh_token_obj=RefreshToken(
+        user_id=user.id,
+        token=new_refresh_token,
+        expires_at=datetime.utcnow()+timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    )
+
+    db.add(new_refresh_token_obj)
+
+    #create new access access token
+    access_token_toencode_data={
+        "sub":str(user.id)
+    }
+
+    new_access_token=create_access_token(access_token_toencode_data)
+
+    #persist new refresh token in db 
+    await db.commit()
+
+    #return new tokens 
+    return{
+        "access_token":new_access_token,
+        "refresh_token":new_refresh_token,
+        "token_type":"bearer"
+    }
+
+
