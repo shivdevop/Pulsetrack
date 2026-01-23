@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter,Depends,HTTPException,status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select 
+from sqlalchemy import select,update 
 
 from app.api.deps import get_db
 from app.core.jwt import create_access_token
@@ -11,7 +11,7 @@ from app.core.security import verify_password,get_current_user,create_refresh_to
 from app.core.config import settings
 from app.models.user import User
 from app.models.refresh_token import RefreshToken
-from app.schemas.auth import RefreshTokenRequest
+from app.schemas.auth import RefreshTokenRequest,LogoutRequest
 
 router=APIRouter(tags=["auth"])
 
@@ -119,4 +119,22 @@ async def refresh_token(data: RefreshTokenRequest, db: AsyncSession = Depends(ge
         "token_type":"bearer"
     }
 
+@router.post("/logout")
+async def logout(data: LogoutRequest, db: AsyncSession = Depends(get_db)):
 
+    #Find Refresh Token 
+    result=await db.execute(select(RefreshToken).where(RefreshToken.token==data.refresh_token))
+    refresh_token=result.scalar_one_or_none()
+    
+    #if refresh token already invalidated, then logout!!!
+    if not refresh_token or refresh_token.revoked:
+        return {"message":"logged out successfully"}
+    
+    #revoke refresh token 
+    await db.execute(update(RefreshToken).where(RefreshToken.id==refresh_token.id).values(revoked=True))
+
+    await db.commit()
+
+    return{
+        "message":"Logged out successfully"
+    }
