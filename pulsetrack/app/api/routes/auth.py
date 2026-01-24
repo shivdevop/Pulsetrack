@@ -7,7 +7,7 @@ from sqlalchemy import select,update
 
 from app.api.deps import get_db
 from app.core.jwt import create_access_token
-from app.core.security import verify_password,get_current_user,create_refresh_token
+from app.core.security import verify_password,get_current_user,create_refresh_token,require_admin
 from app.core.config import settings
 from app.models.user import User
 from app.models.refresh_token import RefreshToken
@@ -149,3 +149,10 @@ async def list_sessions(current_user_id:int =Depends(get_current_user),
 
     sessions=result.scalars().all()
     return sessions
+
+
+@router.get("/admin/stats")
+async def admin_stats(admin: User = Depends(require_admin)):
+    return {
+        "message": f"Welcome admin {admin.email}"
+    }
