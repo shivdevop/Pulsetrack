@@ -7,7 +7,7 @@ class Habit(Base):
 
     id=Column(Integer, primary_key=True)
     user_id=Column(
-        Integer, ForeignKey("users.id",ondelete="CASCADE"),nullabe=False
+        Integer, ForeignKey("users.id",ondelete="CASCADE"),nullable=False
     )
 
     name=Column(String, nullable=False)
@@ -18,4 +18,3 @@ class Habit(Base):
     target_count=Column(Integer, nullable=False)
     user=relationship("User",back_populates="habits")
     logs=relationship("HabitLog",back_populates="habit",cascade="all,delete-orphan")
-    
