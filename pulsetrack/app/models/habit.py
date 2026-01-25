@@ -17,4 +17,5 @@ class Habit(Base):
     )
     target_count=Column(Integer, nullable=False)
     user=relationship("User",back_populates="habits")
+    logs=relationship("HabitLog",back_populates="habit",cascade="all,delete-orphan")
     
