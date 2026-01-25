@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String, Enum
 from app.db.base import Base
+from sqlalchemy.orm import relationship
 
 class User(Base):
     __tablename__="users"
@@ -11,6 +12,11 @@ class User(Base):
         Enum("user","admin",name="user_roles"),
         default="user",
         nullable=False
+    )
+    habits=relationship(
+        "Habit",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
     
 
