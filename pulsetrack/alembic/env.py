@@ -5,7 +5,10 @@ sys.path.append(str(Path(__file__).resolve().parents[1]))
 from app.core.config import settings
 from app.db.base import Base 
 from app.models.user import User
-from app.models.refresh_token import RefreshToken   
+from app.models.habit import Habit
+from app.models.habit_log import HabitLog
+from app.models.refresh_token import RefreshToken
+
 
 from logging.config import fileConfig
 
