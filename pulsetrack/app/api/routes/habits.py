@@ -43,3 +43,75 @@ async def list_habits(
 
     return habits
 
+
+
+#get single habit details
+@router.get("/{habit_id}",response_model=HabitResponse)
+async def get_habit(
+    habit_id: int,
+    current_user:User =Depends(get_current_user),
+    db: AsyncSession=Depends(get_db)
+):
+    query=select(Habit).where(Habit.id==habit_id,Habit.user_id==current_user.id)
+    query_result=await db.execute(query)
+    habit=query_result.scalar_one_or_none()
+
+    if not habit:
+        raise HTTPException(
+            status_code=404,
+            detail="habit not found"
+        )
+    
+    return habit 
+
+
+#update a particular habit
+@router.patch("/{habit_id}",response_model=HabitResponse)
+async def update_habit(
+    habit_id:int,
+    update_data: HabitUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)):
+
+    query=select(Habit).where(Habit.id==habit_id,Habit.user_id==current_user.id)
+    query_result=await db.execute(query)
+
+    habit=query_result.scalar_one_or_none()
+    if not habit:
+        raise HTTPException(
+            status_code=404,
+            detail="habit not found"
+        )
+    
+    for field,value in update_data.dict(exclude_unset=True).items():
+        setattr(habit,field,value)
+
+    await db.commit()
+    await db.refresh(habit)
+
+    return habit 
+
+
+
+
+
+#delete a particular habit 
+@router.delete("/{habit_id}",status_code=204)
+async def delete_habit(
+    habit_id: int,
+    current_user:User =Depends(get_current_user),
+    db: AsyncSession=Depends(get_db)
+):
+    query=select(Habit).where(Habit.id==habit_id,Habit.user_id==current_user.id)
+    query_result=await db.execute(query)
+    habit=query_result.scalar_one_or_none()
+
+    if not habit:
+        raise HTTPException(
+            status_code=404,
+            detail="habit not found"
+        )
+    
+    await db.delete(habit)
+    await db.commit()
+    
