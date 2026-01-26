@@ -19,6 +19,7 @@ class HabitUpdate(BaseModel):
 class HabitResponse(HabitBase):
     id: int
     created_at:datetime 
+    user_id: int
 
 
     class Config:
