@@ -11,4 +11,3 @@ class HabitLog(Base):
     completed_at=Column(DateTime,default=datetime.utcnow(),nullable=False)
     #we store habit log when habit was done 
     habit=relationship("Habit",back_populates="logs")
-    
