@@ -7,7 +7,7 @@ from app.api.deps import get_db
 from app.core.security import get_current_user
 from app.models.habit import Habit
 from app.models.user import User
-from app.services.health_log import validate_and_log_habit
+from app.services.health_log import validate_and_log_habit,calculate_streak
 
 router=APIRouter(prefix="/habits",tags=["habits"])
 
@@ -153,4 +153,26 @@ async def log_habit(
 
 
 
+#calculate streak for a particular habit
+@router.get("/{habit_id}/streak")
+async def get_streak(
+    habit_id:int,
+    user:User=Depends(get_current_user),
+    db:AsyncSession=Depends(get_db)
+):
+    
+    query=select(Habit).where(Habit.id==habit_id,Habit.user_id==user.id)
+    queryresult=await db.execute(query)
+    habit=queryresult.scalar_one_or_none()
 
+    if not habit:
+        raise HTTPException(
+            status_code=404,
+            detail="Habit not found"
+        )
+    
+    streak=await calculate_streak(db,habit)
+    return {
+        "HabitId":habit.id,
+        "CurrentStreak":streak
+    }
