@@ -51,4 +51,65 @@ async def get_active_streaks(db:AsyncSession, user: User)->int:
 
     return active_Streaks
 
-        
+#current best/longest ongoing streak 
+async def get_ongoing_longest_streak(db:AsyncSession,user:User):
+    result=await db.execute(select(Habit).where(Habit.user_id==user.id))
+    habits=result.scalars().all()
+
+    longest=0
+    for habit in habits:
+        streak=await calculate_streak(db,habit)
+        longest=max(longest,streak)
+
+    return longest    
+
+
+async def get_dashboard_overview(db: AsyncSession, user: User):
+    return {
+        "total_habits": await get_total_habits(db, user),
+        "completed_today": await habits_completed_today(db, user),
+        "active_streaks": await get_active_streaks(db, user),
+        "longest_streak": await get_ongoing_longest_streak(db, user),
+    }
+
+
+async def get_dashboard_habits(db: AsyncSession, user: User):
+    result = await db.execute(
+        select(Habit).where(Habit.user_id == user.id)
+    )
+    habits = result.scalars().all()
+
+    today_start = datetime.utcnow().replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    today_end = today_start + timedelta(days=1)
+
+    response = []
+
+    for habit in habits:
+        log_count = await db.execute(
+            select(func.count(HabitLog.id))
+            .where(
+                HabitLog.habit_id == habit.id,
+                HabitLog.completed_at >= today_start,
+                HabitLog.completed_at < today_end
+            )
+        )
+
+        completed_today = (
+            log_count.scalar_one() >= habit.target_count
+        )
+
+        streak = await calculate_streak(db, habit)
+
+        response.append({
+            "habit_id": habit.id,
+            "name": habit.name,
+            "frequency": habit.frequency_type,
+            "target_count": habit.target_count,
+            "completed_today": completed_today,
+            "current_streak": streak,
+        })
+
+    return response
+
